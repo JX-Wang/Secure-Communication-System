@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 #include <math.h>
 #include <errno.h>
 #include <netdb.h>
@@ -108,3 +109,9 @@ int main(){
     return 0;
 }
  
+=======
+int main(){
+    int x = 99;
+    printf("%d", x);
+}
+>>>>>>> 64cde71dc4d5c1c370d1bde96357fb39b195a4e7

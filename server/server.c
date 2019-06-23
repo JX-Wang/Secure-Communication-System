@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 #include <math.h>
 #include <sys/stat.h> 
 #include <fcntl.h>
@@ -184,4 +185,9 @@ int main()
 	}
 close(serverSocket);
 return 0;
+=======
+void main(){
+     double x = 241.471;
+     printf("%f",x);
+>>>>>>> 64cde71dc4d5c1c370d1bde96357fb39b195a4e7
 }
