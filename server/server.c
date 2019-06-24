@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 #include <math.h>
 #include <sys/stat.h> 
 #include <fcntl.h>
@@ -123,17 +122,19 @@ int main()
 	printf("Diffie-Hellman\n");
 	// send p to client
 	printf("input p:");
-	gets(buffer);
+	scanf("%s", &buffer);
 	//printf("\n");
+	printf("p is:%s\n", buffer);
 	send(client, buffer, strlen(buffer), 0);
-	strncpy(p, buffer, strlen(p));
+	strncpy(p, buffer, 10);
+	printf("p is:%s\n", p);
 
 	// recv g from client
-	buffer[0] = '\0';
+	memset(buffer, '\0', sizeof(buffer));
 	printf("waitting for g from client\n");
-	recv(client, buffer, 1024, 0);
-	printf("g is:%s", buffer);
-	strncpy(g, buffer, strlen(g));
+	recv(client, buffer, 200, 0);
+	printf("g is:%s\n", buffer);
+	strncpy(g, buffer, 10);
 
 	printf("p is %s, g is %s\n", p, g);
 
@@ -141,19 +142,25 @@ int main()
 	double t_a;
     printf("input A:");
     scanf("%lf", &t_a);
-    printf("\n");
+    // printf("\n");
 
     // yb and send yb
     double yb;
     yb = fmod(pow(atof(g), t_a), atof(p));
-    strncpy(buffer, strlen(ftoa(ya)), sizeof(buffer));
+	printf("yb is %.0lf\n", yb); // check
+	char t_yb[10];
+	sprintf(t_yb, "%.0lf", yb);
+	printf("1\n");
+    strncpy(buffer, t_yb, strlen(t_yb));
     send(client, buffer, strlen(buffer), 0);
+	printf("2");
     printf("yb is :\n", yb);
 
     // recv ya from client
-	buffer[0] = '\0';
+	memset(buffer, '\0', sizeof(buffer));
     recv(client, buffer, 200, 0);
     strncpy(ya, buffer, strlen(ya));
+	printf("recv from client ya is:%s\n", ya);
 
     double t_key;
     //t_key = atof(t_key);
@@ -185,9 +192,4 @@ int main()
 	}
 close(serverSocket);
 return 0;
-=======
-void main(){
-     double x = 241.471;
-     printf("%f",x);
->>>>>>> 64cde71dc4d5c1c370d1bde96357fb39b195a4e7
 }

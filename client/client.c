@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 #include <math.h>
 #include <errno.h>
 #include <netdb.h>
@@ -27,7 +26,7 @@ int main(){
     char recvbuf[200];
     int iDataNum;
 	char p[10], g[10];
-	char B, ya, yb[10];
+	char B, yb[10];
 	char key[10];
     if((clientSocket = socket(AF_INET, SOCK_STREAM, 0)) < 0){
 
@@ -48,6 +47,7 @@ int main(){
     // diffie-hellman
 	printf("Diffie-Hellman\n");
 	printf("waitting for p from server\n");
+	
 	// recv p from server
 	iDataNum = recv(clientSocket, recvbuf, 200, 0);
 	printf("p is %s\n", recvbuf);
@@ -63,24 +63,29 @@ int main(){
 	printf("p is %s, g is %s\n", p, g);
 
 	// recv yb
+	memset(recvbuf, '\0', sizeof(recvbuf));
 	printf("waiting for yb from server!\n");
 	recv(clientSocket, recvbuf, 200, 0);
     strncpy(yb, recvbuf, strlen(yb));
-	sendbuf[0] = '\0';
-    recvbuf[0] = '\0';
+	printf("recv from server yb is:%s\n", yb);
+	memset(sendbuf, '\0', sizeof(sendbuf));
+    memset(recvbuf, '\0', sizeof(recvbuf));
 
 	// random B
 	double t_b;
-	printf("input B:";);
-	scannf("%lf", &t_b);
+	printf("input B:");
+	scanf("%lf", &t_b);
 	printf("\n");
 
 	// ya and send ya
 	double ya;
 	ya = fmod(pow(atof(g), t_b), atof(p));
-	strncpy(sendbuf, strlen(ftoa(ya)), sizeof(sendbuf));
+	printf("ya is:%lf\n", ya);  // check
+	char t_ya[10];
+	sprintf(t_ya, "%.0lf", ya);  // double -> char
+	strncpy(sendbuf, t_ya, strlen(t_ya));
 	send(clientSocket, sendbuf, strlen(sendbuf), 0);
-	printf("ya is :\n", ya);
+	printf("ya is :%s\n", ya);
 
 	//sendbuf[0] = '\0';
 	//recvbuf[0] = '\0';
@@ -94,24 +99,20 @@ int main(){
 
 
     while(1){
-	printf("发送消息:");
-	scanf("%s", sendbuf);
-	printf("\n");
-	send(clientSocket, sendbuf, strlen(sendbuf), 0);
-	if(strcmp(sendbuf, "quit") == 0)break;
-	printf("读取消息:");
-	recvbuf[0] = '\0';
-	iDataNum = recv(clientSocket, recvbuf, 200, 0);
-	recvbuf[iDataNum] = '\0';
-	printf("%s\n", recvbuf);
+		printf("发送消息:");
+		scanf("%s", sendbuf);
+		printf("\n");
+		send(clientSocket, sendbuf, strlen(sendbuf), 0);
+		
+		if(strcmp(sendbuf, "quit") == 0)break;
+		
+		printf("读取消息:");
+		recvbuf[0] = '\0';
+		iDataNum = recv(clientSocket, recvbuf, 200, 0);
+		recvbuf[iDataNum] = '\0';
+		printf("%s\n", recvbuf);
 	}
-    close(clientSocket);
+    
+	close(clientSocket);
     return 0;
 }
- 
-=======
-int main(){
-    int x = 99;
-    printf("%d", x);
-}
->>>>>>> 64cde71dc4d5c1c370d1bde96357fb39b195a4e7
