@@ -3,15 +3,15 @@
 
 int main(){
 	char key[] = "10";
-	char plain[] = "nihao";
+	char plain[] = "nihaowoshiwangjunxionglaizihitwh";
 	printf("key:%s\nplain:%s\n", key, plain);
 
-	unsigned char cipher[256];
-	strncpy(cipher, aes_encrypt(key, plain), strlen(cipher));
+	char* cipher;
+	cipher = aes_encrypt(key, plain);
 	printf("cipher is %s\n", cipher);
 
-	unsigned char rst_plain[256];
-	strncpy(rst_plain, aes_decrypt(key, cipher), 256);
+	char* rst_plain;
+	rst_plain = aes_decrypt(key, cipher);
 	printf("After decrypt plain is: %s\n", rst_plain);
 
 }

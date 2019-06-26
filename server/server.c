@@ -11,6 +11,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <openssl/rand.h>
+#include <openssl/evp.h>
+#include "dec.h"
 #define SERVER_PORT 8048
 /*
 监听后，一直处于accept阻塞状态，
@@ -33,7 +36,7 @@ int main()
     int iDataNum;
 	char p[10], g[10];
     char A, ya[10], yb[10];
-    char key[10];
+    char key[4];
 
 	//socket函数，失败返回-1 
 	//int socket(int domain, int type, int protocol);
@@ -165,22 +168,67 @@ int main()
     double t_key;
     //t_key = atof(t_key);
     t_key = fmod(pow(atof(ya), t_a), atof(p));
-    printf("final key is: %lf\n", t_key);
+    printf("final key is: %.0lf\n", t_key);
 
+	printf("step 0\n");
+	sprintf(key, "%.0lf", t_key);
+	printf("step 1\n");
+	/* generate encryption key from user entered key */
+	if(!PKCS5_PBKDF2_HMAC_SHA1(key, strlen(key),NULL,0,1000,32,key)){
+		printf("Error in key generation\n");
+		exit(1);
+	}
+	unsigned char aad[16] = "abcdefghijklmnop";
+	/*
+	unsigned char iv[16] = {'a', 'b', 'c', 'd', 
+							'e', 'f', 'g', 'h', 
+							'i', 'j', 'k', 'a', 
+							'b', 'c', 'd', 'e'
+						};
+	unsigned char tag[32] = {'a', 'b', 'c', 'd', 
+							 'e', 'f', 'g', 'h', 
+							 'i', 'j', 'k', 'a', 
+							 'b', 'c', 'd', 'e',
+							 'a', 'b', 'c', 'd', 
+							 'e', 'f', 'g', 'h', 
+							 'i', 'j', 'k', 'a', 
+							 'b', 'c', 'd', 'e'
+						};
+	 */
 	while(1)
 	    {
 		printf("读取消息:");
 		buffer[0] = '\0';
  		iDataNum = recv(client, buffer, 1024, 0);
- 
+		printf("origin cipher text is:%s\n", buffer);
 		if(iDataNum < 0){
- 
 		    perror("recv null");
 		    continue;}
-
+		unsigned char pt[1024+EVP_MAX_BLOCK_LENGTH], ciphertext[1024];
+		unsigned char iv[32], tag[16];
+		printf("recv cipher lenght is:%d\n", strlen(buffer));
+		printf("step 2\n");
+		memcpy(iv, buffer, 32);
+		printf("iv is:%s\n", iv);
+		printf("sizeof, strlen:%d %d\n", sizeof(iv), strlen(iv));
+		printf("step 3\n");
+		memcpy(tag, buffer+32, 16); 
+		printf("tag is:%s\n", tag);
+		printf("sizeof, strlen:%d %d\n", sizeof(tag), strlen(tag));
+		printf("step 4\n");
+		memcpy(ciphertext, buffer+48, 14);
+		printf("step 5\n");
+		int k=8;
+		k = decrypt(ciphertext, k, aad, sizeof(aad), tag, key, iv, pt);
+		if(k>0){
+			pt[k] = '\0';
+			printf("after decrypt is:%s\n", pt);
+		}
+		else
+			printf("Unreliable Decryption, maybe the encrypted data was tampered\n");
 		buffer[iDataNum] = '\0';
  
-		if(strcmp(buffer, "quit") == 0)break;
+		if(strcmp(pt, "quit") == 0)break;
 		printf("%s\n", buffer);
 		printf("发送消息:");
 		scanf("%s", buffer);
@@ -193,3 +241,4 @@ int main()
 close(serverSocket);
 return 0;
 }
+

@@ -9,25 +9,22 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <openssl/rand.h>
+#include <openssl/evp.h>
+#include "enc.h"
 #define SERVER_PORT 8048
  
-/*
-连接到服务器后，会不停循环，等待输入，
-输入quit后，断开与服务器的连接
-*/
  
 int main(){
  
-//客户端只需要一个套接字文件描述符，用于和服务器通信
     int clientSocket;
-//描述服务器的socket
     struct sockaddr_in serverAddr;
     char sendbuf[200];
     char recvbuf[200];
     int iDataNum;
 	char p[10], g[10];
 	char B, yb[10];
-	char key[10];
+	char key[4];
     if((clientSocket = socket(AF_INET, SOCK_STREAM, 0)) < 0){
 
 	perror("socket");
@@ -35,8 +32,6 @@ int main(){
 
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(SERVER_PORT);
-    //指定服务器端的ip，本地测试：127.0.0.1
-    //inet_addr()函数，将点分十进制IP转换成网络字节序IP
  
     serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
     if(connect(clientSocket, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) < 0){
@@ -51,8 +46,8 @@ int main(){
 	// recv p from server
 	iDataNum = recv(clientSocket, recvbuf, 200, 0);
 	printf("p is %s\n", recvbuf);
-	strncpy(p, recvbuf, strlen(p));
-	sendbuf[0] = '\0';
+	strncpy(p, recvbuf, strlen(recvbuf));
+	memset(recvbuf, '\0', sizeof(recvbuf));
 
 	// send g to server
 	printf("input g:%s", sendbuf);
@@ -63,10 +58,9 @@ int main(){
 	printf("p is %s, g is %s\n", p, g);
 
 	// recv yb
-	memset(recvbuf, '\0', sizeof(recvbuf));
 	printf("waiting for yb from server!\n");
 	recv(clientSocket, recvbuf, 200, 0);
-    strncpy(yb, recvbuf, strlen(yb));
+    strncpy(yb, recvbuf, strlen(recvbuf));
 	printf("recv from server yb is:%s\n", yb);
 	memset(sendbuf, '\0', sizeof(sendbuf));
     memset(recvbuf, '\0', sizeof(recvbuf));
@@ -87,24 +81,62 @@ int main(){
 	send(clientSocket, sendbuf, strlen(sendbuf), 0);
 	printf("ya is :%s\n", ya);
 
-	//sendbuf[0] = '\0';
-	//recvbuf[0] = '\0';
-	//recv(clientSocket, recvbuf, 200, 0);
-	//strncpy(yb, recvbuf, strlen(yb));
-
 	double t_key;
    	//t_key = atof(t_key);
 	t_key = fmod(pow(atof(yb), t_b), atof(p));
-	printf("final key is: %lf\n", t_key);
+	printf("final key is: %.0lf\n", t_key);
 
-
+	sprintf(key, "%.0lf", t_key);  
+	/* generate encryption key from user entered key */
+	if(!PKCS5_PBKDF2_HMAC_SHA1(key, strlen(key),NULL,0,1000,32,key)){
+		printf("Error in key generation\n");
+		exit(1);
+	}
+	unsigned char aad[16]="abcdefghijklmnop";
+	/*
+	unsigned char iv[16] = {'a', 'b', 'c', 'd', 
+							'e', 'f', 'g', 'h', 
+							'i', 'j', 'k', 'a', 
+							'b', 'c', 'd', 'e'
+						};
+	unsigned char tag[32] = {'a', 'b', 'c', 'd', 
+							 'e', 'f', 'g', 'h', 
+							 'i', 'j', 'k', 'a', 
+							 'b', 'c', 'd', 'e',
+							 'a', 'b', 'c', 'd', 
+							 'e', 'f', 'g', 'h', 
+							 'i', 'j', 'k', 'a', 
+							 'b', 'c', 'd', 'e'
+						};
+ 	*/
     while(1){
+		unsigned char plaintext[1024];
+		unsigned char ciphertext[1024+EVP_MAX_BLOCK_LENGTH];
+		unsigned char tag[16];
+		int k;
 		printf("发送消息:");
-		scanf("%s", sendbuf);
+		scanf("%s", plaintext);
 		printf("\n");
-		send(clientSocket, sendbuf, strlen(sendbuf), 0);
+		/* generate random IV */
+		unsigned char iv[32];
+		while(!RAND_bytes(iv,sizeof(iv)));
 		
-		if(strcmp(sendbuf, "quit") == 0)break;
+		/* encrypt the text and print on STDOUT */
+		k = encrypt(plaintext, strlen(plaintext), aad, sizeof(aad), key, iv, ciphertext, tag);
+		printf("iv is %s\n", iv);
+		printf("sizeof, strlen:%d %d\n", sizeof(iv), strlen(iv));
+		printf("tag is %s\n", tag);
+		printf("sizeof, strlen:%d %d\n", sizeof(tag), strlen(tag));
+		printf("send clipher text is:%s\n", ciphertext);
+		printf("sizeof, strlen:%d %d\n", sizeof(ciphertext), strlen(ciphertext));
+		memcpy(sendbuf, iv, 32);
+		memcpy(sendbuf+32, tag, 16);
+		memcpy(sendbuf+48, ciphertext, strlen(ciphertext));
+		printf("send buffer is %s\n", sendbuf);
+		printf("send buffer len is %d\n", strlen(sendbuf));
+		send(clientSocket, sendbuf, strlen(sendbuf), 0);
+		memset(sendbuf,'\0', sizeof(sendbuf));
+		if(strcmp(plaintext, "quit") == 0)break;
 		
 		printf("读取消息:");
 		recvbuf[0] = '\0';
@@ -116,3 +148,4 @@ int main(){
 	close(clientSocket);
     return 0;
 }
+

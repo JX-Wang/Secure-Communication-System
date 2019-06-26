@@ -1,8 +1,3 @@
-/*
-	Author: Kunal Baweja
-	Date: 04-Jan-2014
-*/
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -139,51 +134,3 @@ int decrypt(unsigned char *ciphertext, int ciphertext_len, unsigned char *aad,
 		return -1;
 	}
 }
-
-
-int main (int argc, char **argv)
-{
-	unsigned char plaintext[1024],key[32],ciphertext[1024+EVP_MAX_BLOCK_LENGTH],tag[32],pt[1024+EVP_MAX_BLOCK_LENGTH];
-	unsigned char iv[16];
-	unsigned char aad[16]="abcdefghijklmnop";	//dummy
-	int k;
-
-	printf("Enter key: ");
-	scanf("%s",key);
-	
-	/* generate encryption key from user entered key */
-	if(!PKCS5_PBKDF2_HMAC_SHA1(key, strlen(key),NULL,0,1000,32,key))
-	{
-		printf("Error in key generation\n");
-		exit(1);
-	}
-
-	/* generate random IV */
-	while(!RAND_bytes(iv,sizeof(iv)));
-
-	/* get plaintext input */
-	printf("Enter plaintext: ");
-	scanf("%s",plaintext);
-
-	/* encrypt the text and print on STDOUT */
-	k = encrypt(plaintext, strlen(plaintext), aad, sizeof(aad), key, iv, ciphertext, tag);
-	printf("k is %d:\n", k);
-    printf("aad is:%s\n", aad);
-    printf("key is:%s\n", key);
-    printf("iv is:%s\n", iv);
-    printf("tag is:%s\n", tag);
-	printf("ciphertext is:%s\n",ciphertext);
-
-	/* decrypt the text and print on STDOUT */
-	k = decrypt(ciphertext, strlen(plaintext), aad, sizeof(aad), tag, key, iv, pt);
-	//if(k>0)
-	//{
-    printf("k is %d:\n", k);
-	pt[k]='\0';
-	printf("after decrypt is:%s\n",pt);
-	//}
-	//else
-	//	printf("Unreliable Decryption, maybe the encrypted data was tampered\n");
-	return 0;
-}
-
