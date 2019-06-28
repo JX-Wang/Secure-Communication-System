@@ -33,7 +33,7 @@ int main(){
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(SERVER_PORT);
  
-    serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    serverAddr.sin_addr.s_addr = inet_addr("192.168.206.137");
     if(connect(clientSocket, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) < 0){
 	perror("connect");
 	return 1;}
@@ -44,6 +44,7 @@ int main(){
 	printf("waitting for p from server\n");
 	
 	// recv p from server
+    memset(recvbuf, '\0', sizeof(recvbuf));
 	iDataNum = recv(clientSocket, recvbuf, 200, 0);
 	printf("p is %s\n", recvbuf);
 	strncpy(p, recvbuf, strlen(recvbuf));
@@ -69,12 +70,12 @@ int main(){
 	double t_b;
 	printf("input B:");
 	scanf("%lf", &t_b);
-	printf("\n");
+	//printf("\n");
 
 	// ya and send ya
 	double ya;
 	ya = fmod(pow(atof(g), t_b), atof(p));
-	printf("ya is:%lf\n", ya);  // check
+	//printf("ya is:%lf\n", ya);  // check
 	char t_ya[10];
 	sprintf(t_ya, "%.0lf", ya);  // double -> char
 	strncpy(sendbuf, t_ya, strlen(t_ya));
@@ -117,6 +118,7 @@ int main(){
 		printf("发送消息:");
 		scanf("%s", plaintext);
 		printf("\n");
+		if(strcmp(plaintext, "quit") == 0)break;
 		/* generate random IV */
 		unsigned char iv[32];
 		while(!RAND_bytes(iv,sizeof(iv)));
@@ -136,7 +138,7 @@ int main(){
 		printf("send buffer len is %d\n", strlen(sendbuf));
 		send(clientSocket, sendbuf, strlen(sendbuf), 0);
 		memset(sendbuf,'\0', sizeof(sendbuf));
-		if(strcmp(plaintext, "quit") == 0)break;
+		//if(strcmp(plaintext, "quit") == 0)break;
 		
 		printf("读取消息:");
 		recvbuf[0] = '\0';

@@ -95,7 +95,7 @@ int main()
 	//表达式：char *inet_ntoa (struct in_addr);
  
 	printf("IP is %s\n", inet_ntoa(clientAddr.sin_addr));
-	printf("Port is %d\n", htons(clientAddr.sin_port));
+	printf("Port is %d\n", ntohs(clientAddr.sin_port));
 	
 	//diffie-hellman
 	/*
